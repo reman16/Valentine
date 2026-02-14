@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Be My Valentine?</title>
+  <style>
+    :root{
+      --bg1:#ffe7ee;
+      --bg2:#fff7fb;
+      --text:#222;
+      --yes:#22c55e;
+      --yes-dark:#16a34a;
+      --no:#ef4444;
+      --no-dark:#dc2626;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background: radial-gradient(circle at 20% 10%, var(--bg2), var(--bg1));
+      overflow:hidden;
+    }
+
+    /* floating hearts background */
+    .hearts {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .heart {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      transform: rotate(45deg);
+      opacity: 0.65;
+      animation: floatUp linear infinite;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,.08));
+    }
+    .heart::before, .heart::after{
+      content:"";
+      position:absolute;
+      width:18px; height:18px;
+      background: currentColor;
+      border-radius: 50%;
+    }
+    .heart{
+      background: currentColor;
+    }
+    .heart::before{ left:-9px; top:0; }
+    .heart::after{ left:0; top:-9px; }
+
+    @keyframes floatUp {
+      from { transform: translateY(110vh) rotate(45deg); }
+      to   { transform: translateY(-20vh) rotate(45deg); }
+    }
+
+    .card{
+      position:relative;
+      z-index:1;
+      width:min(720px, 92vw);
+      padding: 34px 22px 30px;
+      border-radius: 22px;
+      background: rgba(255,255,255,.75);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 18px 60px rgba(0,0,0,.12);
+      text-align:center;
+    }
+
+    .bear{
+      width: 150px;
+      height: 150px;
+      margin: 0 auto 10px;
+      display:grid;
+      place-items:center;
+      border-radius: 16px;
+      background: rgba(255,255,255,.65);
+      overflow:hidden;
+    }
+    .bear img{
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 8px;
+    }
+
+    h1{
+      font-size: clamp(28px, 5vw, 52px);
+      margin: 8px 0 20px;
+      font-weight: 900;
+      letter-spacing: .3px;
+    }
+
+    .btn-row{
+      position: relative;
+      height: 90px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 18px;
+      margin-top: 6px;
+    }
+
+    button{
+      border: 0;
+      cursor: pointer;
+      padding: 14px 32px;
+      border-radius: 14px;
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      transition: transform .08s ease, filter .2s ease, background .2s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:active{ transform: translateY(1px) scale(.98); }
+
+    #yesBtn{ background: var(--yes); }
+    #yesBtn:hover{ background: var(--yes-dark); }
+
+    /* The NO button is absolutely positioned so it can dodge */
+    #noBtn{
+      position: absolute;
+      background: var(--no);
+      left: 50%;
+      transform: translateX(120px); /* start slightly to the right */
+    }
+    #noBtn:hover{ background: var(--no-dark); }
+
+    .result{
+      margin-top: 16px;
+      font-size: 22px;
+      font-weight: 800;
+      min-height: 32px;
+    }
+
+    .small{
+      margin-top: 10px;
+      font-size: 14px;
+      opacity: .75;
+    }
+  </style>
+</head>
+<body>
+  <div class="hearts" id="hearts"></div>
+
+  <main class="card">
+    <!-- Replace the img src with your own cute gif/png -->
+    <div class="bear">
+      <img src="https://media.tenor.com/8kGqS7G7m1UAAAAi/bear-cute.gif" alt="Cute bear" />
+    </div>
+
+    <h1>Will you be my Valentine?</h1>
+
+    <div class="btn-row" id="arena">
+      <button id="yesBtn">Yes</button>
+      <button id="noBtn" aria-label="No">No</button>
+    </div>
+
+    <div class="result" id="result"></div>
+    <div class="small">Tip: try hovering “No” 😉</div>
+  </main>
+
+  <script>
+    // --- generate floating hearts ---
+    const hearts = document.getElementById("hearts");
+    const colors = ["#ff3b6b", "#ff7aa2", "#ff4d4d", "#ff5ea8", "#ff9ac2"];
+
+    for (let i = 0; i < 28; i++) {
+      const h = document.createElement("div");
+      h.className = "heart";
+      h.style.left = Math.random() * 100 + "vw";
+      h.style.animationDuration = (6 + Math.random() * 8) + "s";
+      h.style.animationDelay = (-Math.random() * 10) + "s";
+      h.style.color = colors[Math.floor(Math.random() * colors.length)];
+      h.style.opacity = (0.25 + Math.random() * 0.6).toFixed(2);
+      const size = 10 + Math.random() * 18;
+      h.style.width = size + "px";
+      h.style.height = size + "px";
+      hearts.appendChild(h);
+    }
+
+    // --- button logic ---
+    const arena = document.getElementById("arena");
+    const noBtn = document.getElementById("noBtn");
+    const yesBtn = document.getElementById("yesBtn");
+    const result = document.getElementById("result");
+
+    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+    function moveNoButton() {
+      // Get arena box
+      const a = arena.getBoundingClientRect();
+      const b = noBtn.getBoundingClientRect();
+
+      // Compute a random spot inside arena (with padding), ensuring the button stays inside
+      const padding = 8;
+      const maxX = a.width - b.width - padding;
+      const maxY = a.height - b.height - padding;
+
+      const x = Math.random() * maxX + padding;
+      const y = Math.random() * maxY + padding;
+
+      noBtn.style.left = x + "px";
+      noBtn.style.top = y + "px";
+      noBtn.style.transform = "translateX(0)"; // disable initial translate once moved
+    }
+
+    // Start the No button positioned nicely after layout
+    window.addEventListener("load", () => {
+      // place "No" a bit right of center initially
+      const a = arena.getBoundingClientRect();
+      noBtn.style.top = "18px";
+      noBtn.style.left = clamp(a.width * 0.62, 0, a.width - noBtn.offsetWidth) + "px";
+      noBtn.style.transform = "translateX(0)";
+    });
+
+    // Dodge on hover/touch attempts
+    noBtn.addEventListener("mouseenter", moveNoButton);
+    noBtn.addEventListener("touchstart", (e) => { e.preventDefault(); moveNoButton(); }, { passive:false });
+
+    // Optional: also dodge if they try to click
+    noBtn.addEventListener("click", moveNoButton);
+
+    yesBtn.addEventListener("click", () => {
+      result.textContent = "YAY!! 💖🥰 See you on Valentine’s!";
+      // disable the No button so it stops moving after success
+      noBtn.disabled = true;
+      noBtn.style.filter = "grayscale(1)";
+      noBtn.style.cursor = "not-allowed";
+    });
+  </script>
+</body>
+</html>
